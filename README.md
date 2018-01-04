@@ -48,10 +48,15 @@ exit 0
 things.py請自行下載使用,
 這支程式目的是上傳至Thingspeak (程式原理是訂閱LASS資料, 並上傳至Thingspeak)
 
-使用ssh登入, 並下以下指令
+使用ssh登入, 並執行以下指令
 
 nohup python things.py LASS_DEVICE_ID ThingSpeak_API_KEY > /dev/null 2>&1 &
 
+其中LASS_DEVICE_ID請改成你的LASS DEVICE ID, ThingSpeak_API_KEY改成你自己的KEY
+
+後面的> /dev/null 2>&1 &表示是背景執行, 並將結果導向null, 經實驗, 若不導向null, Linkit 7688 duo晶片空間會被感測資料灌爆 !
+
+可使用top指令查看這二支程式(iot1.js and things.py) be working
 
 共三支程式, 可至以下網址下載
 https://github.com/chinlunghsu/LASS
