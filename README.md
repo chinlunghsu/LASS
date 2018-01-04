@@ -37,7 +37,7 @@ lat : xx.xxxx,//使用google map查詢
 lng : xxx.xxxx,
 
 things.py請自行下載使用,
-這支程式目的是上傳至Thingspeak (程式原理是訂閱LASS資料, 並上傳至Thingspeak)
+這支程式目的是上傳至Thingspeak (程式原理是訂閱LASS資料, 並上傳至Thingspeak, 更新頻率約一分鐘)
 
 讓系統開機可以自動執行二支程式
 vim /etc/rc.local 
