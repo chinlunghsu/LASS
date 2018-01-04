@@ -88,6 +88,7 @@ def on_message(client, userdata, msg):
                                'field3': value_pm25, 'field4': value_pm10, 
                                'key': ThingSpeak_API})
             post_to_thingspeak(params)
+            time.sleep(30)  # sleep 30 seconds
     except:
          return
 
