@@ -18,7 +18,8 @@ long pmat10=0;
 long pmat25=0;
 long pmat100=0;
 float hum; //Stores humidity value
-float temp; //Stores temperature valuechar buf[50];
+float temp; //Stores temperature value
+char buf[50];
 int cc=0;//counter
 
 void setup() {
