@@ -36,21 +36,19 @@ lat : xx.xxxx,//使用google map查詢
 
 lng : xxx.xxxx,
 
-
-讓系統開機可以自動work
-vim /etc/rc.local 
-#!/bin/sh -e
-
-node /root/iot1.js
-
-exit 0 
-
 things.py請自行下載使用,
 這支程式目的是上傳至Thingspeak (程式原理是訂閱LASS資料, 並上傳至Thingspeak)
 
 使用ssh登入, 並執行以下指令
 
+讓系統開機可以自動執行二支程式
+vim /etc/rc.local 
+#!/bin/sh -e
+nohup node /root/iot1.js > /dev/null 2>&1 &
 nohup python things.py LASS_DEVICE_ID ThingSpeak_API_KEY > /dev/null 2>&1 &
+
+exit 0 
+
 
 其中LASS_DEVICE_ID請改成你的LASS DEVICE ID, ThingSpeak_API_KEY改成你自己的KEY
 
