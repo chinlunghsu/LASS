@@ -18,7 +18,7 @@ LCD (其中vcc請接5v, 其它直接使用I2C)
 
 Arduino 使用 lass.ino (請自行下載使用), 並上傳至Linkit 7688 duo
 
-請自行先去Thingspeak註冊 (記下Write API Key, 另外Channel Settings四個, 分別是温度, 溼度, pm2.5及pm10)
+請自行先去ThingSpeak註冊 (記下Write API Key, 另外Channel Settings四個, 分別是温度, 溼度, pm2.5及pm10)
 
 使用ssh登入7688, 下指令
 opkg update
