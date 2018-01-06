@@ -136,7 +136,7 @@ Serial1.print("|s_d0=");//PM2.5=
 Serial1.print(pmat25);
 Serial1.print("|s_d1=");//PM10=
 Serial1.println(pmat10);
-delay(60000);
+delay(2000);  // Delays 2 secods, as the DHT22 sampling rate is 0.5Hz
 lcd.clear();
 Serial.flush();
 Serial1.flush();
