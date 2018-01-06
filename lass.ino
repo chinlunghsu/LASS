@@ -48,7 +48,7 @@ void loop() {
    lcd.clear();
    lcd.setCursor(0, 0);
    lcd.print("DHT sensor fail");
-   delay(5000);
+   delay(2000);
    lcd.setCursor(0, 1);
    lcd.print("PM2.5=");
    lcd.print(pmat25);
