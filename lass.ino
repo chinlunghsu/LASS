@@ -48,7 +48,7 @@ void loop() {
    lcd.clear();
    lcd.setCursor(0, 0);
    lcd.print("DHT sensor fail");
-   delay(2000);
+   delay(2000); // Delays 2 secods, as the DHT22 sampling rate is 0.5Hz
    lcd.setCursor(0, 1);
    lcd.print("PM2.5=");
    lcd.print(pmat25);
