@@ -4,12 +4,21 @@
 #include <LCD.h>
 #include "LiquidCrystal_I2C.h"
 #include <SoftwareSerial.h>
+#include <SeeedOLED.h> //載入SeeedOLED函式庫
+#include <DS1302.h>
 
 //設定 pin 腳
 SoftwareSerial seG3(8,10);
 
 DHT dht(4, DHT22);
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
+DS1302 rtc(A3, A2, A1);
+
+#define PINOUT 7 
+#define ONvalue 30
+#define OFFvalue 20
+#define LEASTONTIME 300000
+#define MOSTONTIMME 3000000
 
 long pmcf10=0;
 long pmcf25=0;
@@ -17,12 +26,35 @@ long pmcf100=0;
 long pmat10=0;
 long pmat25=0;
 long pmat100=0;
+long lastOnTime;
+long heartbeat;
 float hum; //Stores humidity value
 float temp; //Stores temperature value
 char buf[50];
 int cc=0;//counter
+boolean logichandle = 0;
+String dw="";
+String tw = "";
+String hh = "";
+float max25=0;
+float min25=300;
+float temph=0;
+
+
 
 void setup() {
+  rtc.halt(false);
+  rtc.writeProtect(true);
+   // rtc.setDate(18, 1, 2018);
+   // rtc.setTime(10, 20, 00);
+  dw = rtc.getDateStr();
+  
+  SeeedOled.init();  
+  SeeedOled.clearDisplay();  //清除螢幕
+  SeeedOled.setNormalDisplay(); //設定螢幕為正常模式(非反白)
+  SeeedOled.setPageMode();  //設定尋址模式頁模式
+  SeeedOled.setTextXY(0,0); //設定啟始坐標
+  SeeedOled.putString("Hsu_001 station");
   lcd.begin(16, 2); // 初始化 LCD，一行 16 的字元，共 2 行，預設開啟背光
 // 閃爍
   lcd.backlight(); // 開啟背光
@@ -35,30 +67,32 @@ void setup() {
   seG3.begin(9600);//G3
   Serial.begin(9600);
   Serial1.begin(57600);//給 MPU 訊息
-  delay(200);
+  delay(1000);
+  temph = dht.readTemperature();
 }
 
 void loop() {
+  dw = rtc.getDateStr();
   int count = 0;
   unsigned char c;
   unsigned char high;
   hum = dht.readHumidity();
   temp = dht.readTemperature();
-   if (isnan(hum) || isnan(temp)) {
+   if (isnan(hum) || isnan(temp) || abs(temph-temp) > 1) {
    lcd.clear();
    lcd.setCursor(0, 0);
    lcd.print("DHT sensor fail");
-   delay(2000); // Delays 2 secods, as the DHT22 sampling rate is 0.5Hz
    lcd.setCursor(0, 1);
    lcd.print("PM2.5=");
    lcd.print(pmat25);
    lcd.setCursor(9, 1);
    lcd.print("PM10=");
    lcd.print(pmat10);
+   delay(2000);
    return;
     }
     
-  cc++;
+cc++;
   while (seG3.available()) {
     c = seG3.read();
     if((count==0 && c!=0x42) || (count==1 && c!=0x4d)){
@@ -109,8 +143,8 @@ void loop() {
       Serial.println(" ug/m3");
     }
     count++;
-    }
-
+}
+    
   while(seG3.available()) seG3.read();
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -136,9 +170,65 @@ Serial1.print("|s_d0=");//PM2.5=
 Serial1.print(pmat25);
 Serial1.print("|s_d1=");//PM10=
 Serial1.println(pmat10);
-delay(2000);  // Delays 2 secods, as the DHT22 sampling rate is 0.5Hz
-lcd.clear();
-Serial.flush();
-Serial1.flush();
+
+SeeedOled.setTextXY(1, 0);
+SeeedOled.putString("Date: ");
+SeeedOled.putString(rtc.getDateStr());
+SeeedOled.setTextXY(2, 0);
+SeeedOled.putString("Time: ");
+SeeedOled.putString(rtc.getTimeStr());
+
+if (dw == rtc.getDateStr())
+   {
+     if (max25 <= pmat25)
+       {
+         SeeedOled.setTextXY(4, 0);
+         SeeedOled.putString("max: ");
+         SeeedOled.putFloat(pmat25);
+         max25 = pmat25;
+       }
+       else if (min25 >= pmat25)
+       {
+          SeeedOled.setTextXY(6, 0);
+          SeeedOled.putString("min: ");
+          SeeedOled.putFloat(pmat25);
+          min25 = pmat25;
+       } 
+   else if (dw !=  rtc.getDateStr())
+      {
+         max25 =0;
+         min25 =300;
+         dw = rtc.getDateStr();
+      }
+   }
+
+//設定繼電器開關
+tw = rtc.getTimeStr();
+hh = tw.substring(0,2); 
+long nowtime = millis();
+if(logichandle){
+  //Run your logic here;example give you standard windows control
+  if(pmat25 > ONvalue && hh != "23" && hh != "00" && hh != "01" && hh != "02" && hh != "03" && hh != "04" && hh != "05"){
+    digitalWrite(PINOUT,HIGH); //Turn ON
+    lastOnTime =nowtime;
+  }
+  if(pmat25 < OFFvalue && (nowtime - lastOnTime) > LEASTONTIME){
+    digitalWrite(PINOUT,LOW); //Turn OFF
+  }
+  heartbeat =nowtime;
+  //after done place logic handle 0;
+  logichandle=0;  
+ }
+ if((nowtime - heartbeat) > MOSTONTIMME){
+  digitalWrite(PINOUT,LOW); //Turn OFF Because no connection;
+}
+
+SeeedOled.setTextXY(5, 11);
+SeeedOled.putFloat(pmat25);
+temph = temp;
+delay(15000);
+
+
 
 }
+
