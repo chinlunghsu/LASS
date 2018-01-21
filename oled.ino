@@ -40,7 +40,7 @@ float temph=0;
 void setup() {
   rtc.halt(false);
   rtc.writeProtect(true); // 改時間要設為false
-  // rtc.setDate(20, 1, 2018); // 改日期需要把前面的 //刪除, 格式為, 月, 年
+  // rtc.setDate(20, 1, 2018); // 改日期需要把前面的 //刪除, 格式為日, 月, 年
   // rtc.setTime(9,28,00); // 改日期需要把前面的 //刪除
   dw = rtc.getDateStr();
   pinMode(relay,OUTPUT);
