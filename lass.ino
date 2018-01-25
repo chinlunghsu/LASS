@@ -199,7 +199,7 @@ SeeedOled.putString(" % ");
 SeeedOled.putFloat(hum);
 
 temph = temp;
-int g = Serial1.read();                                                                                                                                                                                                  
+int g = Serial1.read();    // 雲端回控繼電器程式碼                                                                                                                                                                                              
     if (g != -1) {
         switch(g) {
           case '0':                
