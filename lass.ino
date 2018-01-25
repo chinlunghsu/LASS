@@ -2,7 +2,6 @@
 #include <ArduinoJson.h>
 #include <Wire.h>
 #include <LCD.h>
-#include "LiquidCrystal_I2C.h"
 #include <SoftwareSerial.h>
 #include <SeeedOLED.h> //載入SeeedOLED函式庫
 #include <DS1302.h>
@@ -11,16 +10,14 @@
 SoftwareSerial seG3(8,10); 
 
 DHT dht(4, DHT22);  //温溼度PIN
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
-DS1302 rtc(A3, A2, A1);
+DS1302 rtc(A3, A2, A1); //時間PIN
 
 
-// #define PINOUT 7 // 繼電器PIN
-#define LEASTONTIME 300000
-#define ONvalue 25
-#define OFFvalue 15
+#define LEASTONTIME 600000
+#define ONvalue 25    // 設定pm2.5最大值
+#define OFFvalue 15   // 設定pm2.5最小值
 
-int relay=7;
+int relay=7; // 繼電器PIN
 long pmcf10=0;
 long pmcf25=0;
 long pmcf100=0;
@@ -42,9 +39,9 @@ float temph=0;
 
 void setup() {
   rtc.halt(false);
-  rtc.writeProtect(true);
-  // rtc.setDate(20, 1, 2018);
-  // rtc.setTime(9,28,00);
+  rtc.writeProtect(true); // 改時間要設為false
+  // rtc.setDate(24, 1, 2018); // 改日期需要把前面的 //刪除, 格式為日, 月, 年
+  // rtc.setTime(19,12,30); // 改日期需要把前面的 //刪除
   dw = rtc.getDateStr();
   pinMode(relay,OUTPUT);
   SeeedOled.init();  
@@ -53,14 +50,6 @@ void setup() {
   SeeedOled.setPageMode();  //設定尋址模式頁模式
   SeeedOled.setTextXY(0,0); //設定啟始坐標
   SeeedOled.putString("Hsu_001 station");
-  lcd.begin(16, 2); // 初始化 LCD，一行 16 的字元，共 2 行，預設開啟背光
-  lcd.backlight(); // 開啟背光
-  delay(200);
-  lcd.noBacklight(); // 關閉背光
-  delay(200);
-  lcd.backlight();
-  lcd.setCursor(0, 0); // 設定游標位置在第一行行首
-  lcd.print("Hello, world!");
   seG3.begin(9600);//G3
   Serial.begin(9600);
   Serial1.begin(57600);//給 MPU 訊息
@@ -76,17 +65,8 @@ void loop() {
   unsigned char high;
   hum = dht.readHumidity();
   temp = dht.readTemperature();
-  if (isnan(hum) || isnan(temp) || abs(temph-temp) > 2)
+  if (isnan(hum) || isnan(temp) || abs(temph-temp) > 2) // 偵測温溼度是否正確
    {
-   lcd.clear();
-   lcd.setCursor(0, 0);
-   lcd.print("DHT sensor fail");
-   lcd.setCursor(0, 1);
-   lcd.print("PM2.5=");
-   lcd.print(pmat25);
-   lcd.setCursor(9, 1);
-   lcd.print("PM10=");
-   lcd.print(pmat10);
    delay(2000);
    return;
    }    
@@ -144,20 +124,6 @@ cc++;
 }
     
   while(seG3.available()) seG3.read();
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(temp);
-  lcd.print(" *C");
-  lcd.setCursor(9, 0);
-  lcd.print(hum);
-  lcd.print(" %");
-  lcd.setCursor(0, 1);
-  lcd.print("PM2.5=");
-  lcd.print(pmat25);
-  lcd.setCursor(9, 1);
-  lcd.print("PM10=");
-  lcd.print(pmat10);
-
 
 //將溫濕度與 PM2.5 資訊傳給 MPU
 Serial1.print("|s_t0=");//Temperature=
@@ -169,14 +135,14 @@ Serial1.print(pmat25);
 Serial1.print("|s_d1=");//PM10=
 Serial1.println(pmat10);
 
-SeeedOled.setTextXY(1, 0);
+SeeedOled.setTextXY(1, 0); // 設定OLED
 SeeedOled.putString("Date: ");
 SeeedOled.putString(rtc.getDateStr());
 SeeedOled.setTextXY(2, 0);
 SeeedOled.putString("Time: ");
 SeeedOled.putString(rtc.getTimeStr());
 
-if (dw == rtc.getDateStr())
+if (dw == rtc.getDateStr())  // 當天計算最高值以及最低值
    {
      if (max25 <= pmat25)
        {
@@ -193,7 +159,7 @@ if (dw == rtc.getDateStr())
           min25 = pmat25;
        } 
    }
-if (dw !=  rtc.getDateStr())
+if (dw !=  rtc.getDateStr()) //不是當天 
       {
          max25 =0;
          min25 =300;
@@ -204,19 +170,19 @@ if (dw !=  rtc.getDateStr())
 tw = rtc.getTimeStr();
 hh = tw.substring(0,2); 
 long nowtime = millis();
-if(pmat25 > ONvalue && (hh != "22") && (hh != "23") && (hh != "00") && (hh != "01") && (hh != "02") && (hh != "03") && (hh != "04") && (hh != "05"))
+if(pmat25 > ONvalue && (hh != "22") && (hh != "23") && (hh != "00") && (hh != "01") && (hh != "02") && (hh != "03") && (hh != "04") && (hh != "05")) // pm2.5大於ONvalue, 以及不是晚上十點到隔天早上五點時段
   {
     digitalWrite(relay,LOW); //Turn ON
     delay(1000);
     lastOnTime =nowtime;   
   }
-if(pmat25 < OFFvalue && (nowtime - lastOnTime) > LEASTONTIME)
+if(pmat25 < OFFvalue && (nowtime - lastOnTime) > LEASTONTIME)  // pm2.5小於OFFvalue以及時間區隔判斷(避免過度啟閉繼電器)
   {
     digitalWrite(relay,HIGH); //Turn OFF
     delay(1000);
   }
 
-if((hh == "22") || (hh == "23") || (hh == "00") || (hh == "01") || (hh == "02") || (hh == "03") || (hh == "04") || (hh == "05"))
+if((hh == "22") || (hh == "23") || (hh == "00") || (hh == "01") || (hh == "02") || (hh == "03") || (hh == "04") || (hh == "05"))  //晚上十點到隔天早上五點時段
   {
     digitalWrite(relay,HIGH); //Turn OFF
     delay(1000);
@@ -233,7 +199,21 @@ SeeedOled.putString(" % ");
 SeeedOled.putFloat(hum);
 
 temph = temp;
+int g = Serial1.read();                                                                                                                                                                                                  
+    if (g != -1) {
+        switch(g) {
+          case '0':                
+             digitalWrite(relay,LOW); 
+             lastOnTime =nowtime; 
+             break;
+          case '1':               
+              digitalWrite(relay,HIGH); 
+              break;
+        }
+    }
 delay(10000);
 }
+
+
 
 
