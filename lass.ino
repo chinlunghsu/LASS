@@ -13,7 +13,8 @@ DHT dht(4, DHT22);  //温溼度PIN
 DS1302 rtc(A3, A2, A1); //時間PIN
 
 
-#define LEASTONTIME 600000
+#define LEASTONTIME 600000  // 十分鐘
+#define RELAYTIME 6000000   // 一百分鐘, 雲端回控使用
 #define ONvalue 25    // 設定pm2.5最大值
 #define OFFvalue 15   // 設定pm2.5最小值
 
@@ -25,6 +26,7 @@ long pmat10=0;
 long pmat25=0;
 long pmat100=0;
 long lastOnTime;
+long lastOnTime1;
 long heartbeat;
 float hum; //Stores humidity value
 float temp; //Stores temperature value
@@ -36,6 +38,7 @@ String hh = "";
 float max25=0;
 float min25=300;
 float temph=0;
+boolean logichande = 1; // 雲端回控判斷
 
 void setup() {
   rtc.halt(false);
@@ -56,6 +59,7 @@ void setup() {
   delay(1000);
   temph = dht.readTemperature();
   long lastOnTime;
+
 }
 
 void loop() {
@@ -170,24 +174,28 @@ if (dw !=  rtc.getDateStr()) //不是當天
 tw = rtc.getTimeStr();
 hh = tw.substring(0,2); 
 long nowtime = millis();
+if((logichande) || (nowtime - lastOnTime1) > RELAYTIME) {      // 雲端回控沒有開始執行,或是操作雲端回控後一百分鐘內沒有動作, 自動開啟智慧判斷
 if(pmat25 > ONvalue && (hh != "22") && (hh != "23") && (hh != "00") && (hh != "01") && (hh != "02") && (hh != "03") && (hh != "04") && (hh != "05")) // pm2.5大於ONvalue, 以及不是晚上十點到隔天早上五點時段
   {
     digitalWrite(relay,LOW); //Turn ON
     delay(1000);
     lastOnTime =nowtime;   
+    logichande =1;
   }
-if(pmat25 < OFFvalue && (nowtime - lastOnTime) > LEASTONTIME)  // pm2.5小於OFFvalue以及時間區隔判斷(避免過度啟閉繼電器)
+if(pmat25 < OFFvalue && (nowtime - lastOnTime) > LEASTONTIME)  // pm2.5小於OFFvalue以及時間區隔判斷, 設定時間為十分鐘 (避免過度啟閉繼電器)
   {
     digitalWrite(relay,HIGH); //Turn OFF
+    logichande =1;
     delay(1000);
   }
 
 if((hh == "22") || (hh == "23") || (hh == "00") || (hh == "01") || (hh == "02") || (hh == "03") || (hh == "04") || (hh == "05"))  //晚上十點到隔天早上五點時段
   {
     digitalWrite(relay,HIGH); //Turn OFF
+    logichande =1;
     delay(1000);
   }
-
+}
 SeeedOled.setTextXY(4, 0);
 SeeedOled.putString("now:       ");
 SeeedOled.putFloat(pmat25);
@@ -198,19 +206,21 @@ SeeedOled.setTextXY(7, 8);
 SeeedOled.putString(" % ");
 SeeedOled.putFloat(hum);
 
-temph = temp;
-int g = Serial1.read();    // 雲端回控繼電器程式碼                                                                                                                                                                                              
+int g = Serial1.read();     // 雲端回控繼電器程式碼                                                                                                                                                                                                   
     if (g != -1) {
         switch(g) {
           case '0':                
              digitalWrite(relay,LOW); 
-             lastOnTime =nowtime; 
+             lastOnTime1 =nowtime; 
+             logichande =0;
              break;
           case '1':               
               digitalWrite(relay,HIGH); 
+              logichande =1;
               break;
         }
     }
+temph = temp;
 delay(10000);
 }
 
