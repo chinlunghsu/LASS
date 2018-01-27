@@ -1,20 +1,26 @@
 # LASS
-以Linkit 7688 duo為基礎之空氣品質偵測系統 (第二版)
+以Linkit 7688 duo為基礎之空氣品質偵測系統 (final version, 2018/1/28)
 (程式均來自開源) 
 
-目標: 上傳空氣品質數據至LASS及Thingspeak
+目標: 上傳空氣品質數據至LASS及Thingspeak, 並可使用手機回控繼電器, 開關空氣清靜機.
 
 需要硬體
 Linkit Smart 7688 duo
 Grove Breakout for LinkIt Smart 7688 Duo
 PMS3003(G3) 粉塵傳感器
 DHT 22數位溫濕度感測器模組
-Arduino I2C 1602 LCD 藍色背光液晶模塊
+Grove - OLED Display
+5V 1路 繼電器模組
+RTC 時間模組
 
 //設定pin腳
 SoftwareSerial seG3(8,10); - G3
 DHT dht(4, DHT22); - DHT22
-LCD (其中vcc請接5v, 其它直接使用I2C)
+DS1302 rtc(A3, A2, A1); //時間PIN
+int relay=7; // 繼電器PIN
+OLED Display IC2
+
+ps. 5v slot不足需自行破線, 再使用熱縮套管結合, 另外, 繼電器外接110v電源線需小心, 需斷電再work.
 
 Arduino 使用 lass.ino (請自行下載使用), 並上傳至Linkit 7688 duo
 
@@ -39,11 +45,33 @@ lng : xxx.xxxx,
 things.py請自行下載使用,
 這支程式目的是上傳至Thingspeak (程式原理是訂閱LASS資料, 並上傳至Thingspeak, 更新頻率約一分鐘)
 
-讓系統開機可以自動執行二支程式
+雲端回控
+至mcs (https://mcs.mediatek.com/) 雲端平台上申請帳號,並記下deviceId與 deviceKey, 以利app.js使用.
+
+雲端回控 (app.js)需安裝下列模組
+
+opkg update
+
+madir app
+ 
+cd app
+
+npm init
+
+問答輸入後按enter, 會產生個json檔.
+
+npm install mcsjs 
+
+安裝forever
+
+npm install forever -g
+
+讓系統開機可以自動執行3支程式
 vim /etc/rc.local 
 #!/bin/sh -e
 nohup node /root/iot1.js > /dev/null 2>&1 &
-nohup python things.py LASS_DEVICE_ID ThingSpeak_API_KEY > /dev/null 2>&1 &
+forever start -c python /root/things.py LASS_DEVICE_ID ThingSpeak_API_KEY 
+nohup node /root/app/app.js > /dev/null 2>&1 &
 
 exit 0 
 
@@ -52,17 +80,16 @@ exit 0
 
 後面的> /dev/null 2>&1 &表示是背景執行, 並將結果導向null, 經親身經驗, 若不導向null, Linkit 7688 duo晶片空間會被感測資料灌爆 !
 
-可使用top指令查看這二支程式(iot1.js and things.py) be working
+可使用top指令查看程式(iot1.js, things.py and app.js) 
 
-共三支程式, 可至以下網址下載
-https://github.com/chinlunghsu/LASS
 
 經實際測試, 可以正常work !
 
-2018 new program
+2018 the final version.
 系統功能有:
-1. 同時將温溼度感測資料上傳雲端LASS及ThingSpeak
-2. 加入繼電器後, 可以手機遠端遙控系統開和關, 以利啟動和關閉空清機
-3. 加入RTC時鐘後, 自動判斷晚上十二點至早上六點關閉空清機, 其它時間則依據PM2.5濃度智慧啟閉空清機（窗形控制，30以上開空清機，20以下關空清機）
+1. 同時將温溼度感測資料上傳雲端LASS及ThingSpeak (iot1.js and things.py)
+2. 手機遠端遙控系統開和關, 以利啟動和關閉空清機 (app.js)
+3. 自動判斷晚上十二點至早上六點關閉空清機, 其它時間則依據PM2.5濃度智慧啟閉空清機（窗形控制，20以上開空清機，10以下關空清機）
+4. 計算當天PM2.5 最大值及最小值
 
 
