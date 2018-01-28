@@ -1,6 +1,6 @@
 # LASS
 
-Based on Linkit 7688 duo, the final version of air quality management system be finished (Jan, 2018). The purpose of this system is to upload air-related data including temperature, humidity, PM2.5 and PM10 to cloud platform such as LASS and Thingspeak. Besides, the system can control air purifier by MCS apps on mobile devices. The hardware of system includes Linkit smart 7688 duo, Grove Breakout for LinkIt Smart 7688 Duo, PMS3003(G3), DHT22 module, OLED Display, relay and RTC time module. The software requires four programs such as lass.ino, iot1.js, app.js and things.py. 
+Based on Linkit 7688 duo, the final version of air quality management system be released (Jan, 2018). The purpose of this system is to upload air-related data including temperature, humidity, PM2.5 and PM10 to cloud platform such as LASS and Thingspeak. Besides, the system can control air purifier by MCS apps on mobile devices. The hardware of system includes Linkit smart 7688 duo, Grove Breakout for LinkIt Smart 7688 Duo, PMS3003(G3), DHT22 module, OLED Display, relay and RTC time module. The software requires four revised programs such as lass.ino, iot1.js, app.js and things.py which are based on LASS open sources and MCS open sources.  
 
 以Linkit 7688 duo為基礎之空氣品質偵測系統 (final version, 2018/1/28)
 (程式均來自開源) 
