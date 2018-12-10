@@ -34,6 +34,7 @@ opkg update
 opkg install mosquitto mosquitto-client libmosquitto
 npm install mqtt@1.7.0 --save
 npm install ntp-client –save
+pip install pyserial paho-mqtt
 opkg install coreutils-nohup
 opkg install nano
 Linkit 7688 duo 使用iot1.js及things.py (use ssh)
