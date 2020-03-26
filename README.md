@@ -60,11 +60,15 @@ madir app
  
 cd app
 
+sudo apt-get install npm (if no npm pakage, install it)
+
 npm init
 
 問答輸入後按enter, 會產生個json檔.
 
 npm install mcsjs 
+
+
 
 安裝forever
 
